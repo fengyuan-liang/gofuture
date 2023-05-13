@@ -1,5 +1,7 @@
 # go-future
 
+[简体中文](https://github.com/fengyuan-liang/gofuture/blob/master/README_ZH.md)
+
 Go-future gives an implementation similar to Java/Scala Futures.
 
 Although there are many ways to handle this behaviour in Golang.
@@ -7,28 +9,47 @@ This library is useful for people who got used to Java/Scala Future implementati
 
 
 #### Import:
+
 ```golang
-import gofuture "github.com/bgokden/gofuture"
+go get "github.com/fengyuan-liang/gofuture"
 ```
 
 #### Usage:
 
 ```golang
-future := gofuture.FutureFunc(func() int {
+future := future.FutureFunc(func() int {
   time.Sleep(5 * time.Second)
   return x * 10
 })
 // do something else here
 // get result when needed
-result := future.Get()
+result, err := future.Get()
 ```
 
 Also it is possible to use timeouts on Get
+
 ```golang
-result := future.GetWithTimeout(3 * time.Second)
+result, err := future.GetWithTimeout(3 * time.Second)
+```
+
+Or it can be used more elegantly
+
+```go
+futureFunc := future.FutureFunc[int](Fibonacci, 10)
+result, err := futureFunc.Get()
+```
+you can handler error
+```go
+futureFunc := future.FutureFunc[int](Add, 10, 20)
+result, err := futureFunc.Get()
+
+func Add(a, b int) (int, error) {
+    return a + b, errors.New("you can return error")
+}
 ```
 
 #### Note:
+
 This is a very basic implementation where only Get and GetWithTimeout functions are implemented.
 
 Future Get returns an interface so type casting should be done by user.

@@ -18,6 +18,7 @@ type Future[T any] struct {
 	Result           T
 	InterfaceChannel <-chan T
 	err              error
+	errChannel       <-chan error
 }
 
 // Get return the result when available. This is a blocking call
@@ -26,6 +27,7 @@ func (f *Future[T]) Get() (T, error) {
 		return f.Result, f.err
 	}
 	f.Result = <-f.InterfaceChannel
+	f.err = <-f.errChannel
 	f.Success = true
 	f.Done = true
 	return f.Result, f.err
@@ -40,6 +42,7 @@ func (f *Future[T]) GetWithTimeout(timeout time.Duration) (T, error) {
 	select {
 	case res := <-f.InterfaceChannel:
 		f.Result = res
+		f.err = <-f.errChannel
 		f.Success = true
 		f.Done = true
 	case <-timeoutChannel:
@@ -61,15 +64,18 @@ func FutureFunc[T any](implem interface{}, args ...interface{}) *Future[T] {
 		valIn[idx] = reflect.ValueOf(elt)
 	}
 	interfaceChannel := make(chan T, 1)
-
+	errChannel := make(chan error, 1)
 	go func() {
 		res := fnVal.Call(valIn)
-		// Only one result is supported
-		if len(res) > 0 {
-			interfaceChannel <- res[0].Interface().(T)
+		// Up to two return values are supported
+		if len(res) > 1 {
+			// handle err
+			errChannel <- res[1].Interface().(error)
 		} else {
-			interfaceChannel <- reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T)
+			// handle err
+			errChannel <- nil
 		}
+		interfaceChannel <- res[0].Interface().(T)
 	}()
 
 	return &Future[T]{
@@ -77,5 +83,6 @@ func FutureFunc[T any](implem interface{}, args ...interface{}) *Future[T] {
 		Done:             false,
 		Result:           reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T),
 		InterfaceChannel: interfaceChannel,
+		errChannel:       errChannel,
 	}
 }

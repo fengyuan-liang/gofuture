@@ -8,7 +8,16 @@ import (
 )
 
 func TestAnonymousFunc(t *testing.T) {
-	futureFunc := FutureFunc[int](Fibonacci, 10)
+	futureFunc := FutureFunc[int](func() int {
+		return Fibonacci(100)
+	})
+	result, err := futureFunc.GetWithTimeout(time.Second * 5)
+	t.Logf("Result: %v\n", result)
+	t.Logf("err: %v\n", err)
+}
+
+func TestFutureFuncWithHandlerError(t *testing.T) {
+	futureFunc := FutureFunc[int](Add, 10, 20)
 	result, err := futureFunc.Get()
 	t.Logf("Result: %v\n", result)
 	t.Logf("err: %v\n", err)

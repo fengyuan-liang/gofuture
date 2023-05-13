@@ -5,11 +5,24 @@
 
 package future
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 func TestSimpleFuture(t *testing.T) {
 	future := SimpleFuture[int](func() (int, error) {
-		return Fibonacci(10), nil
+		return Fibonacci(10), errors.New("err")
+	})
+	// blocking to wait result
+	result, err := future()
+	t.Logf("Result: %v\n", result)
+	t.Logf("err: %v\n", err)
+}
+
+func TestSimpleFuture2(t *testing.T) {
+	future := SimpleFuture[int](func() (int, error) {
+		return Add(1, 4)
 	})
 	// blocking to wait result
 	result, err := future()
@@ -26,4 +39,8 @@ func Fibonacci(n int) int {
 		return 1
 	}
 	return Fibonacci(n-1) + Fibonacci(n-2)
+}
+
+func Add(a, b int) (int, error) {
+	return a + b, errors.New("you can return error")
 }
