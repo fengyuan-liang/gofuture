@@ -1,19 +1,24 @@
-package gofuture_test
+package future
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-
-	gofuture "github.com/bgokden/gofuture"
-	"github.com/stretchr/testify/assert"
 )
+
+func TestAnonymousFunc(t *testing.T) {
+	futureFunc := FutureFunc[int](Fibonacci, 10)
+	result, err := futureFunc.Get()
+	t.Logf("Result: %v\n", result)
+	t.Logf("err: %v\n", err)
+}
 
 func TestFutureFunc(t *testing.T) {
 	x := 10
 	var elapsed time.Duration
 	start := time.Now()
-	future := gofuture.FutureFunc(func() int {
+	future := FutureFunc[int](func() int {
 		printTime(t)
 		time.Sleep(5 * time.Second)
 		fmt.Printf("x = %v\n", x)
@@ -24,21 +29,21 @@ func TestFutureFunc(t *testing.T) {
 	t.Logf("it took %s", elapsed)
 	assert.Less(t, elapsed.Milliseconds(), (1 * time.Second).Milliseconds())
 
-	result := future.Get()
+	result, _ := future.Get()
 	elapsed = time.Since(start)
 	assert.Less(t, (5 * time.Second).Milliseconds(), elapsed.Milliseconds())
-	assert.Equal(t, int(100), result)
-	t.Logf("Result: %v\n", future.Get())
+	assert.Equal(t, 100, result)
+	t.Logf("Result: %v\n", result)
 
 	// This assert tests calling result second time doesn't cause any problems
-	assert.Equal(t, int(100), future.Get())
+	assert.Equal(t, 100, result)
 }
 
 func TestFutureFuncTimeOut(t *testing.T) {
 	x := 10
 	var elapsed time.Duration
 	start := time.Now()
-	future := gofuture.FutureFunc(func() int {
+	future := FutureFunc[int](func() int {
 		printTime(t)
 		time.Sleep(5 * time.Second)
 		fmt.Printf("x = %v\n", x)
@@ -49,13 +54,13 @@ func TestFutureFuncTimeOut(t *testing.T) {
 	t.Logf("it took %s", elapsed)
 	assert.Less(t, elapsed.Milliseconds(), (1 * time.Second).Milliseconds())
 
-	result := future.GetWithTimeout(3 * time.Second)
+	result, err := future.GetWithTimeout(3 * time.Second)
 	elapsed = time.Since(start)
 	assert.Equal(t, nil, result)
 	assert.Less(t, elapsed.Milliseconds(), (4 * time.Second).Milliseconds())
 	t.Logf("Result: %v\n", result)
-
-	assert.Equal(t, nil, future.Get())
+	t.Logf("err: %v\n", err.Error())
+	assert.Equal(t, nil, result)
 }
 
 func printTime(t *testing.T) {
