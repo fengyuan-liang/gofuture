@@ -17,13 +17,13 @@ go get "github.com/fengyuan-liang/gofuture"
 #### Usage:
 
 ```golang
-future := future.FutureFunc(func() int {
-  time.Sleep(5 * time.Second)
-  return x * 10
+futureFunc := future.FutureFunc[int](func() int {
+time.Sleep(5 * time.Second)
+return x * 10
 })
 // do something else here
 // get result when needed
-result, err := future.Get()
+result, err := futureFunc.Get()
 ```
 
 Also it is possible to use timeouts on Get
@@ -37,8 +37,20 @@ Or it can be used more elegantly
 ```go
 futureFunc := future.FutureFunc[int](Fibonacci, 10)
 result, err := futureFunc.Get()
+
+// Fibonacci returns the nth Fibonacci number
+func Fibonacci(n int) int {
+	if n <= 0 {
+		return 0
+	}
+	if n == 1 {
+		return 1
+	}
+	return Fibonacci(n-1) + Fibonacci(n-2)
+}
 ```
-you can handler error
+
+you can handle func error
 ```go
 futureFunc := future.FutureFunc[int](Add, 10, 20)
 result, err := futureFunc.Get()
