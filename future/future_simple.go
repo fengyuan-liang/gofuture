@@ -5,15 +5,23 @@
 
 package future
 
+import "fmt"
+
 // SimpleFuture a simple future func
-func SimpleFuture[T any](f func() (T, error)) func() (interface{}, error) {
+func SimpleFuture(f func() (interface{}, error)) func() (interface{}, error) {
 	var (
-		result T
+		result interface{}
 		err    error
 		c      = make(chan struct{}, 1)
 	)
 	go func() {
-		defer close(c)
+		// recover from panic
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic: %v", r)
+			}
+			close(c)
+		}()
 		result, err = f()
 	}()
 	return func() (interface{}, error) {
