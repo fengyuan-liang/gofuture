@@ -72,6 +72,17 @@ func TestFutureFuncTimeOut(t *testing.T) {
 	assert.Equal(t, nil, result)
 }
 
+func TestFuturePanic(t *testing.T) {
+	futureFunc := FutureFunc[int](func() int {
+		panic("panic")
+		return 10
+	})
+	if _, err := futureFunc.Get(); err != nil {
+		t.Logf("is ErrPanic:%v", ErrPanic == err)
+		t.Logf("ErrPanic:%v", ErrPanic)
+	}
+}
+
 func printTime(t *testing.T) {
 	t.Logf("time: %v\n", time.Now().Unix())
 }

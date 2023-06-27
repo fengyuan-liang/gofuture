@@ -8,9 +8,9 @@ package future
 import "fmt"
 
 // SimpleFuture a simple future func
-func SimpleFuture(f func() (interface{}, error)) func() (interface{}, error) {
+func SimpleFuture[T any](f func() (T, error)) func() (T, error) {
 	var (
-		result interface{}
+		result T
 		err    error
 		c      = make(chan struct{}, 1)
 	)
@@ -22,9 +22,14 @@ func SimpleFuture(f func() (interface{}, error)) func() (interface{}, error) {
 			}
 			close(c)
 		}()
-		result, err = f()
+		val, e := f()
+		if e != nil {
+			err = e
+			return
+		}
+		result = val
 	}()
-	return func() (interface{}, error) {
+	return func() (T, error) {
 		<-c
 		return result, err
 	}

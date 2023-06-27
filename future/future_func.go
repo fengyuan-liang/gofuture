@@ -9,7 +9,15 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"runtime/debug"
 	"time"
+)
+
+var (
+	// ErrTimeOut timed out
+	ErrTimeOut = errors.New("timed out")
+	// ErrPanic panic
+	ErrPanic = errors.New("panic in futureFunc")
 )
 
 // Future type holds Result and state
@@ -50,7 +58,7 @@ func (f *Future[T]) GetWithTimeout(timeout time.Duration) (T, error) {
 		f.Result = reflect.Zero(reflect.TypeOf(f.Result)).Interface().(T)
 		f.Done = true
 		f.Success = false
-		f.err = errors.New("timed out")
+		f.err = ErrTimeOut
 	}
 	return f.Result, f.err
 }
@@ -70,7 +78,10 @@ func FutureFunc[T any](implem interface{}, args ...interface{}) *Future[T] {
 		defer func() {
 			// handle the panic here
 			if r := recover(); r != nil {
-				errChannel <- fmt.Errorf("panic: %v", r)
+				// print the stack trace
+				debug.PrintStack()
+				fmt.Println(fmt.Errorf("panic in futureFunc, err: %v", r))
+				errChannel <- ErrPanic
 			}
 			close(interfaceChannel)
 			close(errChannel)
