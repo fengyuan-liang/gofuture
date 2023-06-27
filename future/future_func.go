@@ -16,8 +16,6 @@ import (
 var (
 	// ErrTimeOut timed out
 	ErrTimeOut = errors.New("timed out")
-	// ErrPanic panic
-	ErrPanic = errors.New("panic in futureFunc")
 )
 
 // Future type holds Result and state
@@ -80,8 +78,7 @@ func FutureFunc[T any](implem interface{}, args ...interface{}) *Future[T] {
 			if r := recover(); r != nil {
 				// print the stack trace
 				debug.PrintStack()
-				fmt.Println(fmt.Errorf("panic in futureFunc, err: %v", r))
-				errChannel <- ErrPanic
+				errChannel <- fmt.Errorf("panic in futureFunc, err: %v", r)
 			}
 			close(interfaceChannel)
 			close(errChannel)
