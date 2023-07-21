@@ -53,7 +53,6 @@ func (f *Future[T]) GetWithTimeout(timeout time.Duration) (T, error) {
 		f.Success = true
 		f.Done = true
 	case <-timeoutChannel:
-		f.Result = reflect.Zero(reflect.TypeOf(f.Result)).Interface().(T)
 		f.Done = true
 		f.Success = false
 		f.err = ErrTimeOut
@@ -92,13 +91,15 @@ func FutureFunc[T any](implem interface{}, args ...interface{}) *Future[T] {
 			// handle err
 			errChannel <- nil
 		}
-		interfaceChannel <- res[0].Interface().(T)
+		result := res[0].Interface()
+		if result != nil {
+			interfaceChannel <- result.(T)
+		}
 	}()
 
 	return &Future[T]{
 		Success:          false,
 		Done:             false,
-		Result:           reflect.Zero(reflect.TypeOf((*T)(nil)).Elem()).Interface().(T),
 		InterfaceChannel: interfaceChannel,
 		errChannel:       errChannel,
 	}

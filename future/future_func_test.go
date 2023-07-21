@@ -78,8 +78,7 @@ func TestFuturePanic(t *testing.T) {
 		return 10
 	})
 	if _, err := futureFunc.Get(); err != nil {
-		t.Logf("is ErrPanic:%v", ErrPanic == err)
-		t.Logf("ErrPanic:%v", ErrPanic)
+		t.Logf("is ErrPanic:%v", err.Error())
 	}
 }
 
